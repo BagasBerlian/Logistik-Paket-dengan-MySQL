@@ -2,6 +2,7 @@ import os
 import requests
 import mysql.connector
 import numpy as np
+from datetime import datetime
 from geopy.distance import geodesic
 from dotenv import load_dotenv
 
@@ -262,13 +263,23 @@ def menu_admin(paket_list):
         else:
             print("Opsi tidak valid. Silakan coba lagi.")
 
+def generate_nomor_paket(alamat_tujuan):
+    # Ambil tanggal saat ini
+    today = datetime.now()
+    # Format nomor paket
+    tanggal = today.strftime("%d")      # 2 digit tanggal
+    karakter_awal = alamat_tujuan[:3].upper()  # 3 karakter awal dari alamat
+    tahun = today.strftime("%y")        # 2 digit terakhir dari tahun
+    return f"{tanggal}{karakter_awal}{tahun}"
+
 def input_data_paket(paket_list):
     try:
-        nomor_paket = input("Nomor Paket: ")
+        # Hapus input nomor paket dan generate otomatis
+        alamat_tujuan = input("Alamat Tujuan(alamat, negara): ")
+        nomor_paket = generate_nomor_paket(alamat_tujuan)  # Generate nomor paket otomatis
         pengirim = input("Pengirim: ")
         penerima = input("Penerima: ")
         berat = float(input("Berat (Kg): "))
-        alamat_tujuan = input("Alamat Tujuan(alamat, negara): ")
 
         paket_baru = Paket(nomor_paket, pengirim, penerima, berat, alamat_tujuan)
         paket_baru.tampilkan_info()  # Tampilkan info paket sebagai feedback
