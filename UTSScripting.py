@@ -8,17 +8,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Koneksi ke database MySQL
-def create_connection():
+def buat_koneksi():
     return mysql.connector.connect(
-        host="localhost",  # Ganti dengan host database Anda
-        user="root",       # Ganti dengan username database Anda
-        password="",       # Ganti dengan password database Anda
-        database=os.getenv("DATABASE")  # Ganti dengan nama database Anda
+        host="localhost",  
+        user="root",       
+        password="",      
+        database=os.getenv("DATABASE") 
     )
 
-def create_table():
-    conn = create_connection()
+def buat_tabel_baru():
+    conn = buat_koneksi()
     cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS paket (
@@ -37,7 +36,7 @@ def create_table():
     conn.close()
 
 # OpenCage API configuration
-API_KEY = os.getenv("API_OPEN_CAGE") # Ganti dengan API key dari OpenCage
+API_KEY = os.getenv("API_OPEN_CAGE")
 BASE_URL = "https://api.opencagedata.com/geocode/v1/json"
 
 class Paket:
@@ -61,7 +60,7 @@ class Paket:
         if self.internasional:
             ongkir *= 1.5
 
-        return np.floor(ongkir)
+        return int(np.floor(ongkir))
 
     def hitung_jarak(self, alamat_tujuan):
         reference_address = "Yogyakarta, Indonesia"
@@ -72,9 +71,15 @@ class Paket:
     def cek_internasional(self, alamat_tujuan):
         negara = get_country(alamat_tujuan)
         return negara.lower() != "indonesia"
+    
+    def format_ongkir(self, ongkir):
+        return f"Rp.{ongkir:,.0f}"
 
     def tampilkan_info(self):
         status = "Internasional" if self.internasional else "Domestik"
+        ongkir = self.hitung_ongkir()  # Hitung ongkir
+        formatted_ongkir = self.format_ongkir(ongkir)
+        
         print("================================================")
         print(f"Nomor Paket: {self.nomor_paket}")
         print(f"Pengirim: {self.pengirim}")
@@ -83,7 +88,7 @@ class Paket:
         print(f"Alamat Tujuan: {self.alamat_tujuan}")
         print(f"Jarak: {self.jarak:.2f} km")
         print(f"Status Pengiriman: {status}")
-        print(f"Ongkos Kirim: Rp{self.hitung_ongkir()}")
+        print(f"Ongkos Kirim: {formatted_ongkir}")
         print("================================================")
 
 def get_coordinates(address):
@@ -94,7 +99,7 @@ def get_coordinates(address):
             'limit': 1
         }
         response = requests.get(BASE_URL, params=params)
-        response.raise_for_status()  # Raise error jika status bukan 200 OK
+        response.raise_for_status() 
         data = response.json()
 
         if data['results']:
@@ -128,10 +133,10 @@ def get_country(address):
 
 def find_furthest_address_from_db():
     try:
-        conn = create_connection()
+        conn = buat_koneksi()
         cursor = conn.cursor()
         cursor.execute("SELECT alamat_tujuan FROM paket")
-        result = cursor.fetchall()  # Ambil semua alamat dari database
+        result = cursor.fetchall()  
         cursor.close()
         conn.close()
 
@@ -168,7 +173,7 @@ def find_furthest_address_from_db():
 
 def hitung_total_pengiriman_from_db():
     try:
-        conn = create_connection()
+        conn = buat_koneksi()
         cursor = conn.cursor()
 
         # Ambil data ongkir domestik
@@ -217,7 +222,7 @@ def hitung_total_pengiriman_from_db():
 
 def paket_terberat_from_db():
     try:
-        conn = create_connection()
+        conn = buat_koneksi()
         cursor = conn.cursor()
         cursor.execute("SELECT nomor_paket, pengirim, penerima, berat, alamat_tujuan, jarak, internasional FROM paket ORDER BY berat DESC LIMIT 1")
         result = cursor.fetchone()  # Ambil satu data paket dengan berat paling besar
@@ -227,7 +232,7 @@ def paket_terberat_from_db():
         if result:
             nomor_paket, pengirim, penerima, berat, alamat_tujuan, jarak, internasional = result
             paket_terberat = Paket(nomor_paket, pengirim, penerima, berat, alamat_tujuan)
-            paket_terberat.jarak = jarak  # Memperbaiki jarak dari database
+            paket_terberat.jarak = jarak  
             paket_terberat.internasional = bool(internasional)  # Memperbaiki status internasional dari database
             
             print("================================================")
@@ -264,25 +269,22 @@ def menu_admin(paket_list):
             print("Opsi tidak valid. Silakan coba lagi.")
 
 def generate_nomor_paket(alamat_tujuan):
-    # Ambil tanggal saat ini
     today = datetime.now()
-    # Format nomor paket
-    tanggal = today.strftime("%d")      # 2 digit tanggal
-    karakter_awal = alamat_tujuan[:3].upper()  # 3 karakter awal dari alamat
-    tahun = today.strftime("%y")        # 2 digit terakhir dari tahun
+    tanggal = today.strftime("%d")     
+    karakter_awal = alamat_tujuan[:3].upper()  
+    tahun = today.strftime("%y")      
     return f"{tanggal}{karakter_awal}{tahun}"
 
 def input_data_paket(paket_list):
     try:
-        # Hapus input nomor paket dan generate otomatis
         alamat_tujuan = input("Alamat Tujuan(alamat, negara): ")
-        nomor_paket = generate_nomor_paket(alamat_tujuan)  # Generate nomor paket otomatis
+        nomor_paket = generate_nomor_paket(alamat_tujuan)
         pengirim = input("Pengirim: ")
         penerima = input("Penerima: ")
         berat = float(input("Berat (Kg): "))
 
         paket_baru = Paket(nomor_paket, pengirim, penerima, berat, alamat_tujuan)
-        paket_baru.tampilkan_info()  # Tampilkan info paket sebagai feedback
+        paket_baru.tampilkan_info() 
         confirm = input("Apakah Anda yakin ingin menyimpan data ini? (y/n): ").lower()
 
         if confirm == 'y':
@@ -296,7 +298,7 @@ def input_data_paket(paket_list):
 
 def save_to_database(paket):
     try:
-        conn = create_connection()
+        conn = buat_koneksi()
         cursor = conn.cursor()
         cursor.execute("""
         INSERT INTO paket (nomor_paket, pengirim, penerima, berat, alamat_tujuan, jarak, internasional)
@@ -310,7 +312,7 @@ def save_to_database(paket):
         raise
 
 def main():
-    create_table()  # Buat tabel jika belum ada
+    buat_tabel_baru()
     paket_list = []  
     print("Sistem Manajemen Pengiriman Paket Perusahaan Logistik Yogyakarta")
     menu_admin(paket_list)
