@@ -6,33 +6,29 @@ This README provides step-by-step instructions for setting up and running the Lo
 
 - Python 3.7 or higher
 - pip (Python package installer)
-- MySQL server
+- MySQL server (Laragon/XAMPP)
 
 ## Setup Instructions
 
 1. Clone the repository:
 
    ```
-   git clone https://github.com/your-username/logistics-management-system.git
-   cd logistics-management-system
+   git clone https://github.com/BagasBerlian/Logistik-Paket-dengan-MySQL.git
+   cd Logistik-Paket-dengan-MySQL
    ```
 
-2. Create a virtual environment (optional but recommended):
-
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
-
-3. Install required packages:
+2. Install required packages:
 
    ```
    pip install mysql-connector-python requests numpy geopy python-dotenv
    ```
 
-4. Set up the MySQL database:
+3. Set up the MySQL database:
 
+   - Run/Start the MySQL server
    - Create a new database in MySQL for this project.
+
+4. Registration in https://opencagedata.com/ to get the API_OPEN_CAGE
 
 5. Create a `.env` file in the project root directory with the following content:
 
@@ -58,7 +54,7 @@ This README provides step-by-step instructions for setting up and running the Lo
 
 7. Run the script:
    ```
-   python logistics_management_system.py
+   python UTSScripting.py
    ```
 
 ## Usage
